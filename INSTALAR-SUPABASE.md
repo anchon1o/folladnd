@@ -5,12 +5,12 @@ Que aporta: os personaxes sincronízanse entre aparellos, os paquetes de pezas c
 ## 1. Preparar Supabase (unha vez, 10 minutos)
 1. Entra no teu proxecto de Supabase → **SQL Editor** → *New query* → pega enteiro `supabase-dnd.sql` → **Run**. Crea as táboas `dnd_mesas`, `dnd_membros`, `dnd_personaxes`, `dnd_paquetes`, `dnd_pezas`, as políticas de seguridade (RLS) e o bucket `dnd-pezas`. Se a última liña (`alter publication…`) dá erro porque a táboa xa está na publicación, ignórao.
 2. **Authentication → Providers → Email**: activado, con *Confirm email* como prefiras. A app entra por **ligazón máxica** (OTP por correo), sen contrasinal.
-3. **Authentication → URL Configuration**: en *Site URL* e en *Redirect URLs* engade a dirección onde vive a app, por exemplo `https://O-TEU-USUARIO.github.io/libro-de-heroes/`. Sen isto, a ligazón do correo non volve á app.
+3. **Authentication → URL Configuration**: en *Site URL* e en *Redirect URLs* engade a dirección onde vive a app, por exemplo `https://folladnd.vercel.app/`. Sen isto, a ligazón do correo non volve á app.
 4. **Database → Replication**: comproba que `dnd_mesas` está na publicación `supabase_realtime` (o SQL intenta engadila).
 5. **Project Settings → API**: copia a **Project URL** e a clave **anon public**. Esa clave é pública por deseño; o que protexe os datos son as políticas RLS do SQL.
 
 ## 2. Conectar a app
-1. Abre a app (mellor a versión web, en GitHub Pages) → Menú → **Axustes e temas** → abaixo, **Nube (Supabase)**.
+1. Abre a app (mellor a versión web, en Vercel) → Menú → **Axustes e temas** → abaixo, **Nube (Supabase)**.
 2. Pega a URL e a clave anon → **Gardar conexión**.
 3. Escribe o teu correo → **Enviar ligazón** → abre a ligazón do correo **no mesmo aparello**. A app queda con sesión (o estado aparece ao lado do botón).
 4. Dende ese momento, cada cambio nun personaxe súbese só (uns segundos despois de deixar de escribir), e ao abrir a app noutro aparello coa mesma sesión, tráense os personaxes que non teñas.

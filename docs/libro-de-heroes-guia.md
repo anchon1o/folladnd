@@ -1,6 +1,6 @@
 # Libro de Heroes — guía do proxecto
 
-*Dossier vivo do creador de follas de personaxe. Actualizado o 27 de setembro de 2026, versión 6.*
+*Dossier vivo do creador de follas de personaxe. Actualizado o 27 de setembro de 2026, versión 6.2.*
 
 > Un só ficheiro HTML, sen servidor, en galego, pensado para xogar con iPad e móbil. Estética de libro antigo con cinco temas. Regras baseadas no SRD 5.2 (CC BY 4.0).
 
@@ -234,7 +234,7 @@ Menú → *Pezas debuxadas* abre unha ferramenta de debuxo por capas, coa mesma 
 | Onde se abre | Como garda | Límites |
 |---|---|---|
 | Dentro de Claude (artefacto) | `window.storage`, automático | 5 MB por elemento: os PDF e mapas grandes **non** caben aquí. |
-| Ficheiro descargado ou web (GitHub Pages) | `IndexedDB` para todo (follas, pezas, PDF, mapas); `localStorage` só como reserva se non hai IndexedDB | Só ese navegador e ese dispositivo. Non se sincroniza. |
+| Ficheiro descargado ou web (Vercel) | `IndexedDB` para todo (follas, pezas, PDF, mapas); `localStorage` só como reserva se non hai IndexedDB | Só ese navegador e ese dispositivo. Non se sincroniza. |
 
 **Copia de seguridade**: Menú → *Exportar ficheiro de copia* (JSON por personaxe). Para pasar un heroe a outro dispositivo, exporta e importa. **Recomendación**: para xogar de verdade, usa o ficheiro descargado.
 
@@ -285,11 +285,13 @@ Con Playwright e Chromium a 820×1180 (iPad vertical), 1180×820 (iPad horizonta
 | v1 | set. 2026 | Folla completa nun HTML: cinco lapelas, modificadores automáticos, barra de vida, dados co selo, gardado automático, exportar/importar, imprimir. |
 | v2 | set. 2026 | Rediseño para iPad e móbil. Lapela «Á mesa». Asistente de creación. Subida de nivel guiada. Compendio en galego. Menú de axustes co modo avanzado. Tiradas gardadas. Dados con animación e son. Mesa do máster con iniciativa. Diario de sesións. PDF en catro páxinas. |
 | v3 | 18 set. 2026 | Cinco temas. Retrato por capas e ficha redonda. Compañeiros. Mapas (mazmorra, taboleiro con néboa, campaña). Bestiario, xeradores e ambiente. Biblioteca de PDF con referencias. Folla do grupo. Cartas imprimibles. Gardado no dispositivo fóra de Claude. |
+| v6.2 | 27 set. 2026 | O paquete de pezas vén co sitio: a app le `packs/packs.json` e tráeo soa a primeira vez que se abre na web, sen que ninguén importe nada. En Paquetes hai «Paquetes deste sitio» para traelos ou repetilos a man. |
+| v6.1 | 27 set. 2026 | Arranxo: importar un paquete `.zip` xa non esixe crear un paquete baleiro antes (créase só, co nome, etiquetas e modo do `paquete.json`) e xa non depende de descargar un lector da rede (lector de zip propio con `DecompressionStream`). Aviso no editor do retrato cando non hai ningún paquete no aparello. |
 | v6 | 27 set. 2026 | Nube opcional con Supabase (prefixo `dnd_`): sesión por ligazón de correo, personaxes sincronizados entre aparellos, mesas con código, iniciativa do máster en directo, paquetes publicados e traídos por id. Esquema en `supabase-dnd.sql`, pasos en `INSTALAR-SUPABASE.md`. Sen probar contra un proxecto real. |
 | v5.5 | 27 set. 2026 | Gardado en IndexedDB fóra de Claude (sen o límite de 5 MB do localStorage), con migración automática dos datos vellos; imaxes compostas en WebP; retrato enteiro tamén na ficha e na tarxeta. Encargo dos corpos para ChatGPT con maniquís por postura (`pedir-corpos-a-chatgpt.md`). |
 | v5.4 | 25 set. 2026 | Harmonización automática: a pel do corpo e a cor do pelo tómanse do rostro e do peiteado escollidos. «Sorpréndeme» escolle as orellas segundo a especie (etiquetas do paquete). Retratos enteiros dentro dos paquetes (`retrato-NN.png`), usables tal cal na folla. Importar paquetes dende unha dirección web. |
 | v5.3 | 24 set. 2026 | Miniaturas das pezas (importación e selectores moito máis rápidos), «Sorpréndeme» tamén escolle pezas dos paquetes, retrato e ficha encadrados sen cortar o pelo, rostros do pack con ombreiro esvaecido para non tapar o corpo. |
-| v5.2 | 24 set. 2026 | Composición do corpo con pezas debuxadas, aliñadas ao maniquí e escaladas co tipo de corpo e a especie; a cabeza pégase na posición exacta. Repositorio listo para GitHub Pages con instrucións. |
+| v5.2 | 24 set. 2026 | Composición do corpo con pezas debuxadas, aliñadas ao maniquí e escaladas co tipo de corpo e a especie; a cabeza pégase na posición exacta. Repositorio listo para publicar (Vercel) con instrucións. |
 | v5.1 | 24 set. 2026 | Primeiro pack de pezas xeradas con ChatGPT (90 pezas de cabeza aliñadas) e 12 retratos; paquetes a cor sen tinguir; colocador de imaxes; descrición para xeradores de imaxes. |
 | v5 | 18 set. 2026 | Ferramenta de debuxo por capas dentro da app (pincel con presión, recheo, borrador, guías) e importador de PNG/.zip debuxados fóra; paquetes de pezas; a cabeza da folla, a figura, a ficha e a tarxeta xa poden usar unha cabeza debuxada a man en vez da automática. |
 | v4.1 | 18 set. 2026 | Creador de personaxes de corpo enteiro: poses, armas, escudos, capas, pernas e calzado. |

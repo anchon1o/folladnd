@@ -1158,7 +1158,8 @@ body[data-theme="comic"] .toast{color:var(--gilt)}
   <div class="mc-body"><div class="avlayout"><div class="avprev"><div class="seg" style="margin-bottom:8px"><button data-avview="full">Corpo enteiro</button><button data-avview="bust">Busto</button></div><div id="avPreview"></div><div class="addrow"><button class="btn" id="avRandom">Sorpréndeme</button><button class="btn small ghost" id="avFull">Figura (PNG)</button><button class="btn small ghost" id="avToken">Ficha (PNG)</button></div></div>
    <div>
     <div class="sechead">Cabeza debuxada a man <span class="tagc">opcional</span></div>
-    <p class="hint">Usa pezas debuxadas por ti ou polos teus amigos no canto do debuxo automático da cabeza. O corpo, por agora, séguese debuxando só.</p>
+    <p class="hint">Usa pezas debuxadas por ti ou polos teus amigos no canto do debuxo automático.</p>
+    <p class="hint" id="avNoPacks" hidden style="border:1px dashed var(--rubric);border-radius:6px;padding:8px 10px"><b>Aínda non hai ningún paquete neste aparello.</b> Se abres a app na web, o paquete tráese só a primeira vez. Se non, toca «Debuxar / xestionar pezas» → lapela <b>Paquetes</b>: alí tes «Paquetes deste sitio» ou «Importar PNG ou .zip».</p>
     <div class="enc-top"><select id="avPackSel" aria-label="Paquete de pezas"><option value="">Ningún · debuxo automático</option></select><button class="btn small" id="avPaintBtn">Debuxar / xestionar pezas</button></div>
     <div id="avPackPieces"></div>
     <div class="sechead">Corpo debuxado a man <span class="tagc">opcional</span></div>
@@ -1210,6 +1211,7 @@ body[data-theme="comic"] .toast{color:var(--gilt)}
    <div id="ptPacks" data-ptpane="packs" hidden>
     <div class="addrow"><button class="btn" id="ptNewPack">Crear paquete novo</button><button class="btn ghost" id="ptImport">Importar PNG ou .zip</button><button class="btn ghost" id="ptImportUrl">Importar dende unha dirección web</button><button class="btn ghost" id="ptFetchCloud">Traer da nube por id</button><input type="file" id="ptImportFile" accept="image/png,.zip" multiple hidden></div>
     <div id="ptPackList" class="mlist"></div>
+    <div id="ptSite"></div>
     <div id="ptImportBox"></div>
    </div>
   </div>
@@ -2285,6 +2287,7 @@ window.addEventListener('afterprint',()=>$$('textarea').forEach(t=>t.style.heigh
  applyTheme();applyA11y();renderAll();setTab(CFG.tab||'p');if(CFG.sb&&CFG.sb.url)nubeInit();
  $('#saveState').textContent=HAS_WS?'Gardado automático activo':(HAS_IDB||HAS_LS)?'Gardado neste dispositivo':'Sen gardado automático: exporta unha copia';
  if(!loaded)setTimeout(()=>openModal('newModal'),350);
+ setTimeout(()=>{try{if(typeof autoloadSitePacks==='function')autoloadSitePacks()}catch(e){}},1200);
 })();
 
 /* ================= RETRATOS POR CAPAS ================= */
@@ -3208,6 +3211,30 @@ function ptInitCanvas(){
 }
 
 const toURL=cv=>{let u='';try{u=cv.toDataURL('image/webp',0.9)}catch(e){}return u.startsWith('data:image/webp')?u:cv.toDataURL('image/png')};
+/* ---------- lector de zip propio (sen depender da rede) ---------- */
+async function zipEntries(file){
+ const buf=await file.arrayBuffer(),dv=new DataView(buf),u8=new Uint8Array(buf);
+ let eocd=-1;for(let i=buf.byteLength-22;i>=0&&i>buf.byteLength-66000;i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break}}
+ if(eocd<0)throw new Error('non é un zip');
+ const n=dv.getUint16(eocd+10,true);let off=dv.getUint32(eocd+16,true);const out=[];
+ for(let k=0;k<n;k++){
+  if(dv.getUint32(off,true)!==0x02014b50)break;
+  const method=dv.getUint16(off+10,true),csize=dv.getUint32(off+20,true),nameLen=dv.getUint16(off+28,true),extraLen=dv.getUint16(off+30,true),cmtLen=dv.getUint16(off+32,true),lho=dv.getUint32(off+42,true);
+  const name=new TextDecoder().decode(u8.subarray(off+46,off+46+nameLen));
+  const lnl=dv.getUint16(lho+26,true),lel=dv.getUint16(lho+28,true),dataOff=lho+30+lnl+lel;
+  out.push({name,method,data:u8.subarray(dataOff,dataOff+csize)});
+  off+=46+nameLen+extraLen+cmtLen;
+ }
+ return out;
+}
+async function zipInflate(e){
+ if(e.method===0)return new Blob([e.data]);
+ if(typeof DecompressionStream==='undefined')throw new Error('sen DecompressionStream');
+ const ds=new DecompressionStream('deflate-raw');
+ return await new Response(new Blob([e.data]).stream().pipeThrough(ds)).blob();
+}
+const blobToData=b=>new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(b)});
+
 /* ---------- miniaturas ---------- */
 async function makeThumb(key,dataURL){try{const im=await new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=dataURL});if(!im)return null;
  const c=document.createElement('canvas');const w=im.width>im.height?160:120;const h=Math.round(w*im.height/im.width);c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);const t=c.toDataURL('image/png');await BIG.set('thumb:'+key,t);return t}catch(e){return null}}
@@ -3265,24 +3292,44 @@ function matchPieceName(name){
 }
 function pieceKeyFor(info){return`piece:${PT.packId}:${info.lenzo}:${info.variant?info.cat+'-'+info.variant:info.cat}:${String(info.idx).padStart(2,'0')}`}
 async function importPngs(files){
- if(!PT.packId){toast('Escolle ou crea antes un paquete para importar nel');return}
+ await ensurePack('Pezas importadas');
  let ok=0;const unknown=[];
  for(const f of files){const info=matchPieceName(f.name),data=await readFile(f);if(!info){unknown.push({file:f.name,data});continue}await putPiece(pieceKeyFor(info),data);ok++}
  toast(`${ok} pezas importadas${unknown.length?`, ${unknown.length} sen recoñecer`:''}`);
  renderUnknown(unknown);fillPackSelects();renderPtGallery();
 }
+async function ensurePack(nome){
+ if(PT.packId&&PACKS.some(x=>x.id===PT.packId))return true;
+ const p={id:uid(),name:(nome||'Paquete importado').slice(0,60),created:Date.now()};PACKS.push(p);await savePacks();PT.packId=p.id;fillPackSelects();renderPackList();
+ toast('Creouse o paquete «'+p.name+'»');return true;
+}
+async function applyMeta(txt){
+ try{const j=JSON.parse(txt),pk=PACKS.find(x=>x.id===PT.packId);if(!pk)return;
+  if(j.nome)pk.name=j.nome;if(j.tint===false)pk.tint=false;if(j.autores&&!pk.authors)pk.authors=j.autores;if(j.pezas)pk.labels=Object.assign(pk.labels||{},j.pezas);
+  await savePacks();fillPackSelects();renderPackList()}catch(e){}
+}
 async function importZip(file){
- if(!PT.packId){toast('Escolle ou crea antes un paquete para importar nel');return}
- const ok=window.JSZip||await loadLib('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
- if(!ok||!window.JSZip){toast('Non se puido cargar o lector de zip (fai falta conexión a primeira vez). Proba a seleccionar os PNG soltos.');return}
- const zip=await JSZip.loadAsync(file),entries=Object.values(zip.files).filter(f=>!f.dir&&/\.png$/i.test(f.name));
- const meta=Object.values(zip.files).find(f=>/paquete\.json$/i.test(f.name));
- if(meta){try{const j=JSON.parse(await meta.async('string')),pk=PACKS.find(x=>x.id===PT.packId);if(pk){if(j.tint===false)pk.tint=false;if(j.autores&&!pk.authors)pk.authors=j.autores;if(j.pezas)pk.labels=Object.assign(pk.labels||{},j.pezas);await savePacks()}}catch(e){}}
+ await ensurePack(file.name.replace(/\.zip$/i,''));
+ let entries=null;
+ try{const raw=await zipEntries(file);entries=[];for(const e of raw){if(e.name.endsWith('/'))continue;entries.push(e)}}catch(e){entries=null}
  let ok2=0;const unknown=[];
- for(const entry of entries){const base=entry.name.split('/').pop(),info=matchPieceName(base),blob=await entry.async('blob');
-  const data=await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(blob)});
-  if(!info){unknown.push({file:base,data});continue}await putPiece(pieceKeyFor(info),data);ok2++}
- toast(`${ok2} pezas importadas do zip${unknown.length?`, ${unknown.length} sen recoñecer`:''}`);
+ if(entries&&typeof DecompressionStream!=='undefined'){
+  toast(`Lendo ${entries.length} ficheiros…`);
+  for(const e of entries){const base=e.name.split('/').pop();
+   if(/paquete\.json$/i.test(base)){try{await applyMeta(await (await zipInflate(e)).text())}catch(x){}continue}
+   if(!/\.png$/i.test(base))continue;
+   let data;try{data=await blobToData(await zipInflate(e))}catch(x){continue}
+   const info=matchPieceName(base);if(!info){unknown.push({file:base,data});continue}
+   await putPiece(pieceKeyFor(info),data);ok2++}
+ }else{
+  const ok=window.JSZip||await loadLib('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
+  if(!ok||!window.JSZip){toast('Non se puido ler o .zip neste navegador. Descomprímeo e importa os PNG soltos.');return}
+  const zip=await JSZip.loadAsync(file),list=Object.values(zip.files).filter(f=>!f.dir);
+  const meta=list.find(f=>/paquete\.json$/i.test(f.name));if(meta){try{await applyMeta(await meta.async('string'))}catch(e){}}
+  for(const entry of list.filter(f=>/\.png$/i.test(f.name))){const base=entry.name.split('/').pop(),info=matchPieceName(base),data=await blobToData(await entry.async('blob'));
+   if(!info){unknown.push({file:base,data});continue}await putPiece(pieceKeyFor(info),data);ok2++}
+ }
+ toast(`${ok2} pezas importadas${unknown.length?`, ${unknown.length} sen recoñecer`:''}`);
  renderUnknown(unknown);fillPackSelects();renderPtGallery();
 }
 function renderUnknown(list){
@@ -3298,11 +3345,37 @@ function renderUnknown(list){
   await putPiece(`${prefix}${String(n).padStart(2,'0')}`,u.data);toast('Peza gardada');b.closest('.improw').remove();renderPtGallery()};
 }
 
+/* ---------- paquetes que veñen co sitio ---------- */
+async function siteManifest(){
+ if(!/^https?:/.test(location.protocol))return null;
+ try{const r=await fetch('packs/packs.json',{cache:'no-cache'});if(!r.ok)return null;const j=await r.json();return Array.isArray(j.paquetes)?j:null}catch(e){return null}
+}
+async function importFromSite(entry,silent){
+ try{const r=await fetch('packs/'+entry.ficheiro,{cache:'force-cache'});if(!r.ok)throw 0;const bl=await r.blob();
+  const prev=PT.packId;PT.packId='';await importZip(new File([bl],entry.ficheiro));PT.packId=prev||PT.packId;return true}
+ catch(e){if(!silent)toast('Non se puido traer «'+entry.nome+'» do sitio');return false}
+}
+async function autoloadSitePacks(){
+ await loadPacks();if(PACKS.length)return;
+ const man=await siteManifest();if(!man)return;
+ const auto=man.paquetes.filter(x=>x.auto!==false);if(!auto.length)return;
+ toast('Preparando as pezas de debuxo…');
+ for(const e of auto)await importFromSite(e,true);
+ await loadPacks();fillPackSelects();
+ if(PACKS.length)toast('Paquete de pezas listo: '+PACKS.map(p=>p.name).join(', '));
+}
+async function renderSitePacks(){
+ const box=$('#ptSite');if(!box)return;const man=await siteManifest();
+ if(!man){box.innerHTML='';return}
+ box.innerHTML=`<h3>Paquetes deste sitio</h3><div class="mlist">${man.paquetes.map((e,i)=>`<div class="mrow" style="grid-template-columns:minmax(0,1fr) auto"><div class="nm"><span>${esc(e.nome)}</span><small>${esc(e.descricion||'')}</small></div><button class="rb" data-ptsite="${i}">Traer</button></div>`).join('')}</div>`;
+ box._man=man;
+}
+
 /* ---------- xanela e eventos ---------- */
-async function openPaint(){await loadPacks();fillPackSelects();openModal('paintModal');ptInitCanvas();renderPtSwatches();await ptRefresh();renderPackList()}
+async function openPaint(){await loadPacks();fillPackSelects();openModal('paintModal');ptInitCanvas();renderPtSwatches();await ptRefresh();renderPackList();renderSitePacks()}
 $('#paintModal').addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;const D=b.dataset;
- if(D.pttab){$$('#ptTabs button').forEach(x=>x.classList.toggle('on',x===b));$$('[data-ptpane]').forEach(p=>p.hidden=p.dataset.ptpane!==D.pttab);if(D.pttab==='packs')renderPackList();return}
+ if(D.pttab){$$('#ptTabs button').forEach(x=>x.classList.toggle('on',x===b));$$('[data-ptpane]').forEach(p=>p.hidden=p.dataset.ptpane!==D.pttab);if(D.pttab==='packs'){renderPackList();renderSitePacks()}return}
  if(D.ptlenzo){$$('[data-ptlenzo]').forEach(x=>x.classList.toggle('on',x===b));PT.lenzo=D.ptlenzo;PT.cat=ptCatList()[0][0];ptRefresh();return}
  if(D.ptcat){PT.cat=D.ptcat;ptRefresh();return}
  if(D.pttool){$$('[data-pttool]').forEach(x=>x.classList.toggle('on',x===b));PT.tool=D.pttool;return}
@@ -3316,6 +3389,7 @@ $('#paintModal').addEventListener('click',e=>{
  if(b.id==='flFix'){flFix();return}
  if(b.id==='flCancel'){flCancel();return}
  if(b.id==='ptNewPack'){ptCreatePack();return}
+ if(D.ptsite!==undefined){const man=$('#ptSite')._man;if(man)importFromSite(man.paquetes[+D.ptsite]).then(()=>{fillPackSelects();renderPackList();ptRefresh()});return}
  if(b.id==='ptImport'){$('#ptImportFile').click();return}
  if(b.id==='ptImportUrl'){(async()=>{const u=prompt('Dirección web do paquete (.zip):','https://');if(!u||!/^https?:/.test(u))return;if(!PT.packId){toast('Escolle ou crea antes un paquete');return}toast('Descargando…');
   try{const r=await fetch(u);if(!r.ok)throw 0;const bl=await r.blob();await importZip(new File([bl],'paquete.zip'))}catch(e){toast('Non se puido descargar. Se o ficheiro está noutro sitio web, descárgao e impórtao dende o teu aparello.')}})();return}
@@ -3344,6 +3418,7 @@ $('#ptImportFile').addEventListener('change',async e=>{const files=[...e.target.
 async function renderPackBlock(){
  if(!PACKS.length)await loadPacks();
  const opts=PACKS.map(p=>`<option value="${p.id}" ${AVS.headPack===p.id?'selected':''}>${esc(p.name)}</option>`).join('');
+ const aviso=$('#avNoPacks');if(aviso)aviso.hidden=PACKS.length>0;
  $('#avPackSel').innerHTML='<option value="">Ningún · debuxo automático</option>'+opts;$('#avPackSel').value=AVS.headPack||'';
  const bopts=PACKS.map(p=>`<option value="${p.id}" ${AVS.bodyPack===p.id?'selected':''}>${esc(p.name)}</option>`).join('');
  $('#avBodyPackSel').innerHTML='<option value="">Ningún · debuxo automático</option>'+bopts;$('#avBodyPackSel').value=AVS.bodyPack||'';
