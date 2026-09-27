@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="gl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Banco de probas do creador de personaxes</title>
+<style>
+body{margin:0;font-family:Georgia,serif;background:#24160d;color:#eddcb3;padding:16px}
+h1{font-size:1.1rem;margin:0 0 10px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+button,select{font:inherit;padding:6px 10px}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.gal figure{margin:0;background:#fff8e6;border-radius:6px;padding:6px;color:#2b1d12}
+.gal figcaption{font-size:.72rem;text-align:center;margin-top:4px}
+.gal svg{width:100%;height:auto;display:block}
+.err{background:#8f2a22;color:#fff;padding:8px;border-radius:6px;white-space:pre-wrap}
+</style></head><body>
+<h1>Banco de probas · creador de personaxes</h1>
+<div class="bar">
+ <select id="mode"><option value="full">Corpo enteiro</option><option value="bust">Busto</option><option value="token">Ficha</option><option value="grey">Maniquí (para as plantillas)</option></select>
+ <select id="pose"><option value="">Postura ao chou</option></select>
+ <button id="re">Outros 24 ao chou</button>
+ <button id="all">Todas as especies × clases (120)</button>
+ <span id="size"></span>
+</div>
+<div id="out" class="gal"></div>
+<script>
+/* Sustitutos mínimos do resto da app: só o que usan as funcións de debuxo */
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const toast=m=>console.log('toast:',m),openModal=()=>{},renderPortrait=()=>{},save=()=>{},S={name:'proba',race:'',cls:'',avatar:null};
+const openPaint=()=>{},renderPackBlock=()=>{},recomposeHead=()=>{},BIG={keys:async()=>[],get:async()=>null};
+const PACKS=[];
+document.body.insertAdjacentHTML('beforeend','<div hidden><div id="avPreview"></div><div id="avOpts"></div><button id="avRandom"></button><button id="avApply"></button><button id="avFull"></button><button id="avToken"></button><select id="avPackSel"></select><div id="avPackPieces"></div><button id="avPaintBtn"></button></div>');
+const SPECIES_LIST=['Humano','Elfo','Anano','Mediano','Gnomo','Draconato','Tiflin','Aasimar','Goliat','Orco'];
+const CLASS_LIST=['Bárbaro','Bardo','Bruxo','Clérigo','Druida','Explorador','Feiticeiro','Guerreiro','Mago','Monxe','Paladín','Pícaro'];
+</script>
+<script src="avatar.js"></script>
+<script src="figure.js"></script>
+<script>
+const POSES=['pe','garda','saudo','cruzados','conxuro','camino'];
+$('#pose').innerHTML+=POSES.map(p=>`<option>${p}</option>`).join('');
+const GREY={body:'atletico',shape:'oval',skin:'#d9d9d9',eyes:'pechados',eyeColor:'#888',brows:'finas',nose:'recto',mouth:'serio',beard:'ningunha',hair:'calvo',hairColor:'#bbb',outfit:'camisa',outfitColor:'#e6e6e6',acc:'ningun',bg:'pergameo',species:'Humano',pose:'pe',weapon:'ningunha',shield:'non',cloak:'non',legwear:'pantalons',legColor:'#e0e0e0',boots:'descalzo'};
+function render(list){
+ const mode=$('#mode').value,pose=$('#pose').value,out=$('#out');out.innerHTML='';let total=0;
+ try{
+  for(const[sp,cl]of list){
+   const A=mode==='grey'?Object.assign({},GREY,{pose:pose||'pe'}):avRandom(sp,cl);if(pose)A.pose=pose;
+   const svg=mode==='bust'?avatarSVG(A,{w:200,h:240}):mode==='token'?tokenSVG(A,'#3f6b55',200):figureSVG(A,{w:300,h:520});
+   total+=svg.length;
+   out.insertAdjacentHTML('beforeend',`<figure>${svg}<figcaption>${sp} · ${cl} · ${A.pose}</figcaption></figure>`);
+  }
+  $('#size').textContent=`tamaño medio: ${Math.round(total/list.length/1024)} kB por figura`;
+ }catch(e){out.innerHTML=`<div class="err">ERRO: ${e.message}\n${e.stack}</div>`}
+}
+const rnd=()=>Array.from({length:24},()=>[SPECIES_LIST[Math.floor(Math.random()*10)],CLASS_LIST[Math.floor(Math.random()*12)]]);
+$('#re').onclick=()=>render(rnd());
+$('#all').onclick=()=>render(SPECIES_LIST.flatMap(s=>CLASS_LIST.map(c=>[s,c])));
+$('#mode').onchange=$('#pose').onchange=()=>render(rnd());
+render(rnd());
+</script></body></html>
