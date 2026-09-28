@@ -1,6 +1,6 @@
 # Libro de Heroes — guía do proxecto
 
-*Dossier vivo do creador de follas de personaxe. Actualizado o 27 de setembro de 2026, versión 6.2.*
+*Dossier vivo do creador de follas de personaxe. Actualizado o 27 de setembro de 2026, versión 7.*
 
 > Un só ficheiro HTML, sen servidor, en galego, pensado para xogar con iPad e móbil. Estética de libro antigo con cinco temas. Regras baseadas no SRD 5.2 (CC BY 4.0).
 
@@ -110,7 +110,7 @@ Botón **Subir de nivel** na cabeceira (ou o aviso dourado cando a XP chega ao l
 
 Ao escribir o nome dun conxuro (ou dunha arma en Combate) o compendio enche dados, notas, nivel e concentración. Hai **~65 conxuros** de trucos a nivel 3 e **34 armas**. Botón *Segundo a clase* pon os espazos da táboa. O campo **Referencia no manual** (p. ex. `Manual p. 241`) abre a Biblioteca nesa páxina.
 
-### 3.7 Creador de personaxes (retrato e corpo enteiro)
+### 3.7 Creador de personaxes (banco de imaxes)
 
 Toca o retrato → *Debuxar un retrato*. A vista por defecto é o **corpo enteiro**; o botón *Busto* amosa só a cabeza (o que vai na folla). Capas:
 
@@ -285,6 +285,7 @@ Con Playwright e Chromium a 820×1180 (iPad vertical), 1180×820 (iPad horizonta
 | v1 | set. 2026 | Folla completa nun HTML: cinco lapelas, modificadores automáticos, barra de vida, dados co selo, gardado automático, exportar/importar, imprimir. |
 | v2 | set. 2026 | Rediseño para iPad e móbil. Lapela «Á mesa». Asistente de creación. Subida de nivel guiada. Compendio en galego. Menú de axustes co modo avanzado. Tiradas gardadas. Dados con animación e son. Mesa do máster con iniciativa. Diario de sesións. PDF en catro páxinas. |
 | v3 | 18 set. 2026 | Cinco temas. Retrato por capas e ficha redonda. Compañeiros. Mapas (mazmorra, taboleiro con néboa, campaña). Bestiario, xeradores e ambiente. Biblioteca de PDF con referencias. Folla do grupo. Cartas imprimibles. Gardado no dispositivo fóra de Claude. |
+| v7 | 27 set. 2026 | **Un só creador de personaxes: o das imaxes.** O editor do retrato traballa só co banco de pezas (retratos enteiros e pezas de cabeza); retíranse da interface as opcións do debuxo automático en SVG, o selector de paquete de corpo e o botón de descrición para xeradores. Ao tocar o retrato ábrese directamente o editor, cun retrato xa composto, e «Sorpréndeme» combina pezas do banco. |
 | v6.2 | 27 set. 2026 | O paquete de pezas vén co sitio: a app le `packs/packs.json` e tráeo soa a primeira vez que se abre na web, sen que ninguén importe nada. En Paquetes hai «Paquetes deste sitio» para traelos ou repetilos a man. |
 | v6.1 | 27 set. 2026 | Arranxo: importar un paquete `.zip` xa non esixe crear un paquete baleiro antes (créase só, co nome, etiquetas e modo do `paquete.json`) e xa non depende de descargar un lector da rede (lector de zip propio con `DecompressionStream`). Aviso no editor do retrato cando non hai ningún paquete no aparello. |
 | v6 | 27 set. 2026 | Nube opcional con Supabase (prefixo `dnd_`): sesión por ligazón de correo, personaxes sincronizados entre aparellos, mesas con código, iniciativa do máster en directo, paquetes publicados e traídos por id. Esquema en `supabase-dnd.sql`, pasos en `INSTALAR-SUPABASE.md`. Sen probar contra un proxecto real. |

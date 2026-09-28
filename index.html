@@ -1019,7 +1019,6 @@ body[data-theme="comic"] .toast{color:var(--gilt)}
       </div>
       <div class="blk">
         <h2>Aparencia</h2>
-        <div id="figureBox" class="noprint" style="float:right;width:120px;margin:0 0 8px 12px"></div>
         <div class="look">
           <label class="fld"><span>Idade</span><input data-f="look.age"></label>
           <label class="fld"><span>Altura</span><input data-f="look.height"></label>
@@ -1155,21 +1154,14 @@ body[data-theme="comic"] .toast{color:var(--gilt)}
 
 <div class="modal full" id="avModal"><div class="modal-card">
   <div class="mc-head"><h2>Retrato</h2><button class="ib" data-close aria-label="Pechar" data-ic="x"></button></div>
-  <div class="mc-body"><div class="avlayout"><div class="avprev"><div class="seg" style="margin-bottom:8px"><button data-avview="full">Corpo enteiro</button><button data-avview="bust">Busto</button></div><div id="avPreview"></div><div class="addrow"><button class="btn" id="avRandom">Sorpréndeme</button><button class="btn small ghost" id="avFull">Figura (PNG)</button><button class="btn small ghost" id="avToken">Ficha (PNG)</button></div></div>
-   <div>
-    <div class="sechead">Cabeza debuxada a man <span class="tagc">opcional</span></div>
-    <p class="hint">Usa pezas debuxadas por ti ou polos teus amigos no canto do debuxo automático.</p>
-    <p class="hint" id="avNoPacks" hidden style="border:1px dashed var(--rubric);border-radius:6px;padding:8px 10px"><b>Aínda non hai ningún paquete neste aparello.</b> Se abres a app na web, o paquete tráese só a primeira vez. Se non, toca «Debuxar / xestionar pezas» → lapela <b>Paquetes</b>: alí tes «Paquetes deste sitio» ou «Importar PNG ou .zip».</p>
-    <div class="enc-top"><select id="avPackSel" aria-label="Paquete de pezas"><option value="">Ningún · debuxo automático</option></select><button class="btn small" id="avPaintBtn">Debuxar / xestionar pezas</button></div>
-    <div id="avPackPieces"></div>
-    <div class="sechead">Corpo debuxado a man <span class="tagc">opcional</span></div>
-    <p class="hint">Pezas de corpo (roupa, brazos, pernas, capa, arma…) dun paquete. O que non teña peza debúxao a app, e a cabeza pégase na mesma posición.</p>
-    <div class="enc-top"><select id="avBodyPackSel" aria-label="Paquete de corpo"><option value="">Ningún · debuxo automático</option></select></div>
-    <div id="avBodyPieces"></div>
-    <div class="addrow" style="margin:6px 0 10px"><button class="btn small ghost" id="avPromptBtn">Descrición para un xerador de imaxes</button></div>
-    <div id="avPromptBox" hidden><textarea id="avPromptTxt" rows="6" readonly style="font-size:.85rem"></textarea><p class="hint">Pégaa en ChatGPT ou noutro xerador, pide un retrato, e sube o resultado tocando o retrato → «Subir unha imaxe».</p></div>
-    <div id="avOpts"></div>
-   </div></div></div>
+  <div class="mc-body"><div class="avlayout">
+   <div class="avprev">
+    <div id="avPreview"></div>
+    <div class="addrow"><button class="btn red" id="avRandom">Sorpréndeme</button><button class="btn small ghost" id="avToken">Ficha (PNG)</button><button class="btn small ghost" id="avClear">Sen retrato</button></div>
+    <p class="hint" id="avNoPacks" hidden style="border:1px dashed var(--rubric);border-radius:6px;padding:8px 10px">Non hai imaxes neste aparello. Na web tráense soas ao abrir a app; se non, vai a Menú → Pezas debuxadas → Paquetes.</p>
+   </div>
+   <div><label class="fld" id="avPackWrap" hidden><span>Banco de imaxes</span><select id="avPackSel"></select></label><div id="avPackPieces"></div></div>
+  </div></div>
   <div class="mc-foot"><button class="btn" data-close>Cancelar</button><button class="btn red" id="avApply">Usar este retrato</button></div>
 </div></div>
 
@@ -1217,7 +1209,7 @@ body[data-theme="comic"] .toast{color:var(--gilt)}
   </div>
 </div></div>
 
-<div class="modal" id="porModal"><div class="modal-card">
+<div class="modal" id="porModal" hidden><div class="modal-card">
   <div class="mc-head"><h2>Retrato do heroe</h2></div>
   <div class="mc-body"><div class="opts" style="grid-template-columns:1fr">
     <button class="opt" data-por="draw"><b>Debuxar un retrato</b><p>Escolle rostro, pel, pelo, roupa e accesorios en estilo cómic.</p></button>
@@ -1731,7 +1723,7 @@ function renderDiary(){
 function renderPortrait(){
  const p=$('#portrait');if(S.portrait){$('#portraitImg').src=S.portrait;$('#portraitImg').style.objectFit=S.portraitFit||'cover';p.classList.add('has')}else{p.classList.remove('has');$('#portraitImg').removeAttribute('src')}
  $('#miniPortrait').innerHTML=S.portrait?`<img src="${S.portrait}" alt="">`:'';
- const fb=$('#figureBox');if(fb)fb.innerHTML=S.avatar?figureSVG(S.avatar,{w:120,h:208}):'';
+
 }
 function renderCharSel(){$('#charSel').innerHTML=index.map(c=>`<option value="${c.id}">${esc(c.name||'Sen nome')}${c.cls?' — '+esc(c.cls)+' '+c.level:''}</option>`).join('');$('#charSel').value=S.id}
 function renderAll(){applySystem();fill();renderAttacks();renderSpells();renderItems();renderSlots();renderResources();renderMacros();renderDiary();renderPortrait();renderCharSel();renderComps();renderLog();derived()}
@@ -2028,7 +2020,7 @@ $('#bLogSum').addEventListener('click',logSummary);
 $('#bLogClr').addEventListener('click',()=>{if(!confirm('Baleirar o cronista?'))return;S.log=[];renderLog();save()});
 
 /* ---------- retrato ---------- */
-$('#portrait').addEventListener('click',()=>openModal('porModal'));
+$('#portrait').addEventListener('click',()=>openAvatar());
 $('#portraitFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
  rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,360/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=im.width*k;cv.height=im.height*k;cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);S.portrait=cv.toDataURL('image/jpeg',.82);renderPortrait();save()};im.src=rd.result};rd.readAsDataURL(f);e.target.value=''});
 
@@ -2432,31 +2424,22 @@ function tokenSVG(A,color='#a47a2a',w=120){
 }
 function svgToPNG(svg,w,h){return new Promise(res=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);res(c.toDataURL('image/png'))};im.src=svgURL(svg)})}
 
-/* ---------- interface ---------- */
-let AVS=null,avView='full';
-document.addEventListener('click',e=>{const b=e.target.closest('[data-avview]');if(b){avView=b.dataset.avview;renderAvatar()}});
+/* ---------- interface: só banco de imaxes ---------- */
+let AVS=null;
 function openAvatar(){
  AVS=S.avatar?Object.assign({},S.avatar):avRandom(S.race,S.cls);
  if(S.race&&AVS.species!==S.race)AVS.species=S.race;
- renderAvatar();openModal('avModal');renderPackBlock();
+ openModal('avModal');renderPackBlock().then(()=>{if(!AVS.portraitImg&&!AVS.headImg&&(AVS.headPack||PACKS.length))randomPackPieces()});
 }
 function renderAvatar(){
- if(AVS.portraitImg&&avView!=='full')$('#avPreview').innerHTML=`<img src="${AVS.portraitImg}" alt="" style="width:100%;border:3px double var(--gilt);border-radius:8px;background:#fff8e6">`;
- else if(AVS.headImg&&avView!=='full')$('#avPreview').innerHTML=`<img src="${AVS.headImg}" alt="" style="width:100%;border:3px double var(--gilt);border-radius:8px;background:#fff8e6">`;
- else $('#avPreview').innerHTML=avView==='full'?figureSVG(AVS,{w:260,h:450}):avatarSVG(AVS,{w:260,h:312});
- $$('[data-avview]').forEach(b=>b.classList.toggle('on',b.dataset.avview===avView));
- const ORDER=['body','pose','weapon','shield','cloak','cloakColor','outfit','outfitColor','legwear','legColor','boots','shape','skin','eyes','eyeColor','brows','nose','mouth','beard','hair','hairColor','acc','bg'];
- $('#avOpts').innerHTML=ORDER.map(k=>{const arr=AV[k],isCol=typeof arr[0]==='string';
-  return`<div class="avcat"><div class="sechead">${AVLAB[k]}</div><div class="avchips">${arr.map(v=>{const val=isCol?v:v[0],lab=isCol?'':v[1];
-   return isCol?`<button class="avcol ${AVS[k]===val?'on':''}" data-av="${k}" data-v="${val}" style="background:${val}" aria-label="${val}"></button>`:`<button class="cond ${AVS[k]===val?'on':''}" data-av="${k}" data-v="${val}">${lab}</button>`}).join('')}</div></div>`}).join('');
+ const img=AVS.portraitImg||AVS.headImg;
+ $('#avPreview').innerHTML=img?`<img src="${img}" alt="" style="width:100%;border:3px double var(--gilt);border-radius:8px;background:#fff8e6">`
+  :`<div style="border:3px double var(--gilt);border-radius:8px;background:rgba(255,248,226,.5);aspect-ratio:5/6;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px"><span class="muted">Escolle un retrato ou compón un coas pezas</span></div>`;
 }
-$('#avOpts').addEventListener('click',e=>{const b=e.target.closest('[data-av]');if(!b)return;const k=b.dataset.av;AVS[k]=b.dataset.v;renderAvatar();
- if(AVS.headPack&&(k==='skin'||k==='hairColor'))recomposeHead();
- else if(AVS.bodyPack){if(k==='pose')renderAvBodyPieces();else recomposeBody()}});
-$('#avRandom').addEventListener('click',()=>{const keep=['headPack','headPieces','headImg','bodyPack','bodyPieces','bodyImg'].map(k=>[k,AVS[k]]);AVS=avRandom(S.race,S.cls);keep.forEach(([k,v])=>AVS[k]=v);renderAvatar();if(AVS.headPack||AVS.bodyPack)randomPackPieces()});
-$('#avApply').addEventListener('click',async()=>{S.avatar=AVS;S.portrait=AVS.portraitImg||AVS.headImg||await svgToPNG(avatarSVG(AVS),400,480);S.portraitFit=AVS.portraitImg?'cover':AVS.headImg?'contain':'cover';renderPortrait();save();$('#avModal').classList.remove('open');toast('Retrato gardado')});
-$('#avFull').addEventListener('click',async()=>{const png=await svgToPNG(figureSVG(AVS),600,1040),l=document.createElement('a');l.href=png;l.download=(S.name||'heroe')+'-figura.png';document.body.appendChild(l);l.click();l.remove();toast('Figura descargada')});
-$('#avToken').addEventListener('click',async()=>{const png=await svgToPNG(tokenSVG(AVS),400),l=document.createElement('a');l.href=png;l.download=(S.name||'heroe')+'-ficha.png';document.body.appendChild(l);l.click();l.remove();toast('Ficha redonda descargada')});
+$('#avRandom').addEventListener('click',()=>{if(typeof randomPackPieces==='function')randomPackPieces()});
+$('#avClear').addEventListener('click',()=>{AVS.portraitIdx=null;AVS.portraitImg=null;AVS.headPieces={};AVS.headImg=null;renderAvatar();renderPackBlock()});
+$('#avApply').addEventListener('click',async()=>{S.avatar=AVS;S.portrait=AVS.portraitImg||AVS.headImg||'';S.portraitFit=AVS.portraitImg?'cover':'contain';renderPortrait();save();$('#avModal').classList.remove('open');toast(S.portrait?'Retrato gardado':'Retrato quitado')});
+$('#avToken').addEventListener('click',async()=>{const png=await svgToPNG(tokenSVG(AVS,'#a47a2a',400),400,400),l=document.createElement('a');l.href=png;l.download=(S.name||'heroe')+'-ficha.png';document.body.appendChild(l);l.click();l.remove();toast('Ficha redonda descargada')});
 
 /* ================= FIGURA DE CORPO ENTEIRO ================= */
 function figureFactors(A){
@@ -3039,7 +3022,7 @@ async function heroCard(){
  g.fillStyle=bg;g.fillRect(0,0,W,H);g.strokeStyle=rub;g.lineWidth=th==='comic'?10:4;g.strokeRect(24,24,W-48,H-48);if(th!=='moderno'){g.lineWidth=1.5;g.strokeRect(38,38,W-76,H-76)}
  const L=lvl();g.fillStyle=rub;g.font=`bold 64px ${font}, serif`;g.textAlign='left';g.fillText(S.name||'Heroe sen nome',330,140);
  g.fillStyle=ink;g.font=`italic 28px Georgia, serif`;g.fillText([S.cls&&`${S.cls} de nivel ${L}`,S.race,S.background].filter(Boolean).join(' · ')||SYS.n,330,185);
- const useFig=S.avatar&&!S.avatar.portraitImg,src=useFig?svgURL(figureSVG(S.avatar)):S.portrait;
+ const useFig=false,src=S.portrait;
  if(src){await new Promise(res=>{const im=new Image();im.onload=()=>{g.save();g.beginPath();g.roundRect(60,60,240,340,th==='moderno'?24:40);g.clip();g.drawImage(im,useFig?40:60,60,useFig?280:240,useFig?485:340);g.restore();g.strokeStyle=gilt;g.lineWidth=6;g.beginPath();g.roundRect(60,60,240,340,th==='moderno'?24:40);g.stroke();res()};im.onerror=res;im.src=src})}
  const box=(x,y,w,h,lab,val)=>{g.fillStyle='rgba(0,0,0,.05)';g.fillRect(x,y,w,h);g.strokeStyle=ink;g.lineWidth=2;g.strokeRect(x,y,w,h);g.fillStyle=ink;g.textAlign='center';g.font=`italic 20px Georgia, serif`;g.fillText(lab,x+w/2,y+30);g.font=`bold 44px ${font}, serif`;g.fillText(String(val),x+w/2,y+h-22)};
  const tiles=[['Vida',`${S.hpCur}/${S.hpMax}`],['Armadura',S.ac],['Iniciativa',SYS.mech==='d100'?(+S.abil.des||0):sg(mod(S.abil.des)+(+S.initBonus||0))],['Velocidade',S.speed||'—']];
@@ -3419,10 +3402,10 @@ async function renderPackBlock(){
  if(!PACKS.length)await loadPacks();
  const opts=PACKS.map(p=>`<option value="${p.id}" ${AVS.headPack===p.id?'selected':''}>${esc(p.name)}</option>`).join('');
  const aviso=$('#avNoPacks');if(aviso)aviso.hidden=PACKS.length>0;
- $('#avPackSel').innerHTML='<option value="">Ningún · debuxo automático</option>'+opts;$('#avPackSel').value=AVS.headPack||'';
- const bopts=PACKS.map(p=>`<option value="${p.id}" ${AVS.bodyPack===p.id?'selected':''}>${esc(p.name)}</option>`).join('');
- $('#avBodyPackSel').innerHTML='<option value="">Ningún · debuxo automático</option>'+bopts;$('#avBodyPackSel').value=AVS.bodyPack||'';
- await renderAvPackPieces();await renderAvBodyPieces();
+ const wrap=$('#avPackWrap');if(wrap)wrap.hidden=PACKS.length<2;
+ if(!AVS.headPack&&PACKS.length)AVS.headPack=PACKS[0].id;
+ const sel=$('#avPackSel');if(sel){sel.innerHTML=opts;sel.value=AVS.headPack||''}
+ await renderAvPackPieces();
 }
 async function renderAvPackPieces(){
  const box=$('#avPackPieces');
@@ -3474,7 +3457,7 @@ async function recomposeHead(){
 const BODY_ORDER=['capa','brazo-atras','pernas','calzado','roupa','cinto','brazo-diante','arma','escudo','efecto'];
 function bodySlot(cat,pose){const c=PT_BODY.find(x=>x[0]===cat);if(!c||!c[3])return cat;if(c[3]==='pose2')return cat+'-'+(pose==='camino'?'camino':'pe');return cat+'-'+(pose||'pe')}
 async function renderAvBodyPieces(){
- const box=$('#avBodyPieces');if(!AVS.bodyPack){box.innerHTML='';return}
+ const box=$('#avBodyPieces');if(!box)return;if(!AVS.bodyPack){box.innerHTML='';return}
  const keys=(await BIG.keys()).filter(k=>k.startsWith(`piece:${AVS.bodyPack}:body:`)),rows=[];
  for(const[cat,label]of PT_BODY){
   const slot=bodySlot(cat,AVS.pose),pre=`piece:${AVS.bodyPack}:body:${slot}:`,ks=keys.filter(k=>k.startsWith(pre)).sort();if(!ks.length)continue;
@@ -3508,17 +3491,19 @@ async function recomposeBody(){
  const small=document.createElement('canvas');small.width=600;small.height=1040;small.getContext('2d').drawImage(cv,0,0,600,1040);
  AVS.bodyImg=toURL(small);renderAvatar();
 }
-$('#avBodyPackSel').addEventListener('change',e=>{AVS.bodyPack=e.target.value||null;AVS.bodyPieces=AVS.bodyPieces||{};renderAvBodyPieces()});
-$('#avBodyPieces').addEventListener('click',e=>{const b=e.target.closest('[data-avbk]');if(!b)return;AVS.bodyPieces=AVS.bodyPieces||{};AVS.bodyPieces[b.dataset.avbk]=b.dataset.avbv;$$(`[data-avbk="${b.dataset.avbk}"]`).forEach(x=>x.classList.toggle('on',x===b));recomposeBody()});
+if($('#avBodyPackSel'))$('#avBodyPackSel').addEventListener('change',e=>{AVS.bodyPack=e.target.value||null;AVS.bodyPieces=AVS.bodyPieces||{};renderAvBodyPieces()});
+if($('#avBodyPieces'))$('#avBodyPieces').addEventListener('click',e=>{const b=e.target.closest('[data-avbk]');if(!b)return;AVS.bodyPieces=AVS.bodyPieces||{};AVS.bodyPieces[b.dataset.avbk]=b.dataset.avbv;$$(`[data-avbk="${b.dataset.avbk}"]`).forEach(x=>x.classList.toggle('on',x===b));recomposeBody()});
 
 async function randomPackPieces(){
+ if(!AVS.headPack&&PACKS.length)AVS.headPack=PACKS[0].id;
+ if(!AVS.headPack){toast('Aínda non hai imaxes neste aparello');return}
+ AVS.portraitIdx=null;AVS.portraitImg=null;
  const keys=await BIG.keys();
  if(AVS.headPack){AVS.headPieces={};for(const[cat]of PT_HEAD){const ks=keys.filter(k=>k.startsWith(`piece:${AVS.headPack}:head:${cat}:`));if(!ks.length)continue;
    const pk=PACKS.find(x=>x.id===AVS.headPack),SPK={Humano:['humana'],Elfo:['élfica','elfica'],Anano:['enana'],Mediano:['hobbit'],Gnomo:['hobbit','enana'],Orco:['orca'],Tiflin:['demon','cornuda'],Draconato:['dracón','dracon'],Aasimar:['alada','humana'],Goliat:['humana','orca']}[AVS.species]||[];
    if(cat==='orellas'&&pk&&pk.labels&&SPK.length){const m=ks.filter(k=>{const l=(pk.labels[`head/orellas-${k.split(':').pop()}.png`]||'').toLowerCase();return SPK.some(s=>l.includes(s))});if(m.length){AVS.headPieces[cat]=pick(m).split(':').pop();continue}}
    const p={rostro:1,ollos:1,boca:1,nariz:1,cellas:1,orellas:.5,'pelo-diante':.9,'pelo-atras':.4,barba:.35,acc:.3,cornos:.2,especie:.15}[cat]??.5;if(Math.random()<p)AVS.headPieces[cat]=pick(ks).split(':').pop()}}
- if(AVS.bodyPack){AVS.bodyPieces={};for(const[cat]of PT_BODY){const ks=keys.filter(k=>k.startsWith(`piece:${AVS.bodyPack}:body:${bodySlot(cat,AVS.pose)}:`));if(!ks.length)continue;const p={roupa:1,pernas:1,calzado:1,'brazo-diante':1,'brazo-atras':1,capa:.4,cinto:.5,arma:.6,escudo:.3,efecto:.15}[cat]??.5;if(Math.random()<p)AVS.bodyPieces[cat]=pick(ks).split(':').pop()}}
- await renderAvPackPieces();if(AVS.bodyPack)await renderAvBodyPieces();
+ await renderAvPackPieces();
 }
 $('#avPackSel').addEventListener('change',e=>{AVS.headPack=e.target.value||null;AVS.headPieces=AVS.headPieces||{};renderAvPackPieces()});
 $('#avPackPieces').addEventListener('click',async e=>{const pb=e.target.closest('[data-avport]');
@@ -3526,7 +3511,7 @@ $('#avPackPieces').addEventListener('click',async e=>{const pb=e.target.closest(
   if(AVS.portraitIdx){AVS.portraitImg=await BIG.get(`piece:${AVS.headPack}:head:retrato:${AVS.portraitIdx}`)}else AVS.portraitImg=null;renderAvatar();return}
  const b=e.target.closest('[data-avpk]');if(!b)return;AVS.headPieces=AVS.headPieces||{};AVS.headPieces[b.dataset.avpk]=b.dataset.avpv;
  $$(`[data-avpk="${b.dataset.avpk}"]`).forEach(x=>x.classList.toggle('on',x===b));recomposeHead()});
-$('#avPaintBtn').addEventListener('click',()=>openPaint());
+if($('#avPaintBtn'))$('#avPaintBtn').addEventListener('click',()=>openPaint());
 
 /* ================= descrición para un xerador de imaxes ================= */
 function avPrompt(A){
@@ -3540,7 +3525,7 @@ function avPrompt(A){
  const en='(English) Bust portrait, front view, fantasy character; European clear-line comic style, clean uniform black ink, flat colors with one shadow and one highlight, no gradients, no text, no watermark.';
  return gl.join('. ')+'.\n\n'+style+'\n\n'+en;
 }
-$('#avPromptBtn').addEventListener('click',()=>{const t=avPrompt(AVS);$('#avPromptBox').hidden=false;$('#avPromptTxt').value=t;navigator.clipboard?.writeText(t).then(()=>toast('Descrición copiada: pégaa no xerador de imaxes e sube o resultado con «Subir unha imaxe»'),()=>toast('Copia o texto do cadro'))});
+if($('#avPromptBtn'))$('#avPromptBtn').addEventListener('click',()=>{const t=avPrompt(AVS);$('#avPromptBox').hidden=false;$('#avPromptTxt').value=t;navigator.clipboard?.writeText(t).then(()=>toast('Descrición copiada: pégaa no xerador de imaxes e sube o resultado con «Subir unha imaxe»'),()=>toast('Copia o texto do cadro'))});
 
 /* ================= NUBE (Supabase, prefixo dnd_) ================= */
 let SB=null,SBU=null,nubeT=null,nubeChan=null,LIVE=null;
